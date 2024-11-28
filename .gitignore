@@ -1,0 +1,12 @@
+# Ignore virtual environment
+626FinalProject_venv/
+
+# Ignore datasets
+data/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore IDE/project-specific files
+.vscode/

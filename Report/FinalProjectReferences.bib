@@ -1,0 +1,89 @@
+@incollection{hafizImageClassificationReinforcement2022,
+  title = {Image {{Classification}} by {{Reinforcement Learning With Two-State Q-Learning}}},
+  booktitle = {Handbook of {{Intelligent Computing}} and {{Optimization}} for {{Sustainable Development}}},
+  author = {Hafiz, Abdul Mueed},
+  year = {2022},
+  pages = {171--181},
+  publisher = {John Wiley \& Sons, Ltd},
+  doi = {10.1002/9781119792642.ch9},
+  urldate = {2024-11-25},
+  abstract = {In this work, an efficient and simple image recognition classification system has been proposed. It consists of components from both reinforcement learning and deep learning. More specifically, Q-learning is used with an agent having two states, and two to three actions. This classifier is different from others, because the latter uses features of convolutional nets and also uses past histories in addition to Q-states. The other techniques found in literature have issues due to the large number of states used, as the dimensions of their feature maps are quite large. Since the novel technique proposed as only two Q-states, it has the advantage of being simple and also having significantly lesser parameters to optimize. Also, it has a straightforward reward process. Another advantage of the proposed classifier is usage of unique action set for image processing not found in literature. Accuracy of the proposed classifier has been compared with various contemporary algorithms on important datasets from ImageNet, Caltech-101, and Cats and Dogs . The classifier given in this work performs better than other classifiers on the various datasets used experimentally.},
+  chapter = {9},
+  copyright = {{\copyright} 2022 Scrivener Publishing LLC},
+  isbn = {978-1-119-79264-2},
+  langid = {english},
+  keywords = {deep learning,I mage classification,I mageNet,I nception V 3,Q -learning,R es N et50,reinforcement learning},
+  file = {/Users/evelynhubbard/Zotero/storage/DG3RNWTU/Hafiz - 2022 - Image Classification by Reinforcement Learning With Two-State Q-Learning.pdf;/Users/evelynhubbard/Zotero/storage/9ZEMU5DZ/9781119792642.html}
+}
+
+@article{leDeepReinforcementLearning2022,
+  title = {Deep Reinforcement Learning in Computer Vision: A Comprehensive Survey},
+  shorttitle = {Deep Reinforcement Learning in Computer Vision},
+  author = {Le, Ngan and Rathour, Vidhiwar Singh and Yamazaki, Kashu and Luu, Khoa and Savvides, Marios},
+  year = {2022},
+  month = apr,
+  journal = {Artificial Intelligence Review},
+  volume = {55},
+  number = {4},
+  pages = {2733--2819},
+  issn = {1573-7462},
+  doi = {10.1007/s10462-021-10061-9},
+  urldate = {2024-11-25},
+  abstract = {Deep reinforcement learning augments the reinforcement learning framework and utilizes the powerful representation of deep neural networks. Recent works have demonstrated the remarkable successes of deep reinforcement learning in various domains including finance, medicine, healthcare, video games, robotics, and computer vision. In this work, we provide a detailed review of recent and state-of-the-art research advances of deep reinforcement learning in computer vision. We start with comprehending the theories of deep learning, reinforcement learning, and deep reinforcement learning. We then propose a categorization of deep reinforcement learning methodologies and discuss their advantages and limitations. In particular, we divide deep reinforcement learning into seven main categories according to their applications in computer vision, i.e. (i) landmark localization (ii) object detection; (iii) object tracking; (iv) registration on both 2D image and 3D image volumetric data (v) image segmentation; (vi) videos analysis; and (vii) other applications. Each of these categories is further analyzed with reinforcement learning techniques, network design, and performance. Moreover, we provide a comprehensive analysis of the existing publicly available datasets and examine source code availability. Finally, we present some open issues and discuss future research directions on deep reinforcement learning in computer vision.},
+  langid = {english},
+  keywords = {Artificial Intelligence,Autonomous landmark detection,Computer vision,Deep learning,Deep reinforcement learning,Image registration,Image segmentation,Object detection,Object tracking,Reinforcement learning,Video analysis}
+}
+
+@inproceedings{parkhiCatsDogs2012,
+  title = {Cats and Dogs},
+  booktitle = {2012 {{IEEE Conference}} on {{Computer Vision}} and {{Pattern Recognition}}},
+  author = {Parkhi, Omkar M and Vedaldi, Andrea and Zisserman, Andrew and Jawahar, C. V.},
+  year = {2012},
+  month = jun,
+  pages = {3498--3505},
+  issn = {1063-6919},
+  doi = {10.1109/CVPR.2012.6248092},
+  urldate = {2024-11-25},
+  abstract = {We investigate the fine grained object categorization problem of determining the breed of animal from an image. To this end we introduce a new annotated dataset of pets covering 37 different breeds of cats and dogs. The visual problem is very challenging as these animals, particularly cats, are very deformable and there can be quite subtle differences between the breeds. We make a number of contributions: first, we introduce a model to classify a pet breed automatically from an image. The model combines shape, captured by a deformable part model detecting the pet face, and appearance, captured by a bag-of-words model that describes the pet fur. Fitting the model involves automatically segmenting the animal in the image. Second, we compare two classification approaches: a hierarchical one, in which a pet is first assigned to the cat or dog family and then to a breed, and a flat one, in which the breed is obtained directly. We also investigate a number of animal and image orientated spatial layouts. These models are very good: they beat all previously published results on the challenging ASIRRA test (cat vs dog discrimination). When applied to the task of discriminating the 37 different breeds of pets, the models obtain an average accuracy of about 59\%, a very encouraging result considering the difficulty of the problem.},
+  keywords = {Cats,Deformable models,Dogs,Head,Image segmentation,Layout,Positron emission tomography},
+  file = {/Users/evelynhubbard/Zotero/storage/XTJRNQSR/6248092.html}
+}
+
+@inproceedings{pirinenDeepReinforcementLearning2018,
+  title = {Deep {{Reinforcement Learning}} of {{Region Proposal Networks}} for {{Object Detection}}},
+  booktitle = {2018 {{IEEE}}/{{CVF Conference}} on {{Computer Vision}} and {{Pattern Recognition}}},
+  author = {Pirinen, Aleksis and Sminchisescu, Cristian},
+  year = {2018},
+  month = jun,
+  pages = {6945--6954},
+  issn = {2575-7075},
+  doi = {10.1109/CVPR.2018.00726},
+  urldate = {2024-11-25},
+  abstract = {We propose drl-RPN, a deep reinforcement learning-based visual recognition model consisting of a sequential region proposal network (RPN) and an object detector. In contrast to typical RPNs, where candidate object regions (RoIs) are selected greedily via class-agnostic NMS, drl-RPN optimizes an objective closer to the final detection task. This is achieved by replacing the greedy RoI selection process with a sequential attention mechanism which is trained via deep reinforcement learning (RL). Our model is capable of accumulating class-specific evidence over time, potentially affecting subsequent proposals and classification scores, and we show that such context integration significantly boosts detection accuracy. Moreover, drl-RPN automatically decides when to stop the search process and has the benefit of being able to jointly learn the parameters of the policy and the detector, both represented as deep networks. Our model can further learn to search over a wide range of exploration-accuracy trade-offs making it possible to specify or adapt the exploration extent at test time. The resulting search trajectories are image- and category-dependent, yet rely only on a single policy over all object categories. Results on the MS COCO and PASCAL VOC challenges show that our approach outperforms established, typical state-of-the-art object detection pipelines.},
+  keywords = {Detectors,History,Object detection,Proposals,Search problems,Task analysis},
+  file = {/Users/evelynhubbard/Zotero/storage/7BYG89GU/8578824.html}
+}
+
+@book{suttonReinforcementLearningIntroduction1992,
+  title = {Reinforcement {{Learning}}: {{An Introduction}}},
+  author = {Sutton, Rchard S. and Barto, Andrew G.},
+  year = {1992},
+  edition = {2},
+  publisher = {Bradford Book}
+}
+
+@misc{uzkentEfficientObjectDetection2020,
+  title = {Efficient {{Object Detection}} in {{Large Images}} Using {{Deep Reinforcement Learning}}},
+  author = {Uzkent, Burak and Yeh, Christopher and Ermon, Stefano},
+  year = {2020},
+  month = apr,
+  number = {arXiv:1912.03966},
+  eprint = {1912.03966},
+  publisher = {arXiv},
+  doi = {10.48550/arXiv.1912.03966},
+  urldate = {2024-11-25},
+  abstract = {Traditionally, an object detector is applied to every part of the scene of interest, and its accuracy and computational cost increases with higher resolution images. However, in some application domains such as remote sensing, purchasing high spatial resolution images is expensive. To reduce the large computational and monetary cost associated with using high spatial resolution images, we propose a reinforcement learning agent that adaptively selects the spatial resolution of each image that is provided to the detector. In particular, we train the agent in a dual reward setting to choose low spatial resolution images to be run through a coarse level detector when the image is dominated by large objects, and high spatial resolution images to be run through a fine level detector when it is dominated by small objects. This reduces the dependency on high spatial resolution images for building a robust detector and increases run-time efficiency. We perform experiments on the xView dataset, consisting of large images, where we increase run-time efficiency by 50\% and use high resolution images only 30\% of the time while maintaining similar accuracy as a detector that uses only high resolution images.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Computer Vision and Pattern Recognition},
+  file = {/Users/evelynhubbard/Zotero/storage/RNKNJ7ID/Uzkent et al. - 2020 - Efficient Object Detection in Large Images using Deep Reinforcement Learning.pdf;/Users/evelynhubbard/Zotero/storage/WWHJP9YI/1912.html}
+}
