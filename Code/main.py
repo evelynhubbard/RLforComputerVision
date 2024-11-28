@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from models.resnet import get_tall_resnet_CNN
+from experiments.train import train_CNN
 
 #from tensorflow.keras.preprocessing import image
 
@@ -14,43 +15,10 @@ from models.resnet import get_tall_resnet_CNN
 # img_array = tf.keras.applications.resnet50.preprocess_input(img_array)  # Preprocess for ResNet-50
 
 # print("Image array shape:", img_array.shape)
-
-train_dataset = tf.keras.utils.image_dataset_from_directory(
-    "Code/data/processed/tiny-imagenet-200/structured_train",
-    image_size=(224, 224),  # ResNet50 input size
-    batch_size=32
-)
-
-val_dataset = tf.keras.utils.image_dataset_from_directory(
-    "Code/data/processed/tiny-imagenet-200/structured_val",
-    image_size=(224, 224),
-    batch_size=32
-)
-
-AUTOTUNE = tf.data.AUTOTUNE
-train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
-val_dataset = val_dataset.prefetch(buffer_size=AUTOTUNE)
-
-
-normalization_layer = tf.keras.layers.Rescaling(1./255)
-train_dataset = train_dataset.map(lambda x, y: (normalization_layer(x), y))
-val_dataset = val_dataset.map(lambda x, y: (normalization_layer(x), y))
-
-
-tall_resnet = get_tall_resnet_CNN()
-
-tall_resnet.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-    loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"]
-)
-
-history = tall_resnet.fit(
-    train_dataset,
-    validation_data=val_dataset,
-    epochs=10  
-)
-tall_resnet.save('tall_resnet_trained_model.h5')
+if __name__ == "__main__":
+    tall_resnet_model = get_tall_resnet_CNN()  # Call model creation function
+    history = train_CNN(tall_resnet_model)
+    tall_resnet_model.save('tall_resnet_trained_model.h5')
 
 
 # feature_map = tall_resnet.predict(img_array)

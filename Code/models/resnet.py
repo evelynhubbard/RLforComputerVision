@@ -26,7 +26,7 @@ def get_tall_resnet_CNN(input_shape=(224, 224, 3), trainable=False):
         tf.keras.layers.Dense(1024,activation='relu'),
         tf.keras.layers.Dense(1024,activation='relu'),
         tf.keras.layers.Dense(512,activation='relu'),
-        tf.keras.layers.Dense(1024,activation='softmax'), #30 is number of classes
+        tf.keras.layers.Dense(4,activation='softmax'), #30 is number of classes
     ])
 
     return tall_model
