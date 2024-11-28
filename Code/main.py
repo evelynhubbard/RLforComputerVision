@@ -50,6 +50,7 @@ history = tall_resnet.fit(
     validation_data=val_dataset,
     epochs=10  
 )
+tall_resnet.save('tall_resnet_trained_model.h5')
 
 
 # feature_map = tall_resnet.predict(img_array)
