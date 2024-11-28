@@ -2,7 +2,10 @@
 626FinalProject_venv/
 
 # Ignore datasets
-data/
+Code/data
+# Allow only the processed data directory
+!Code/data/processed/
+!Code/data/processed/**
 
 # Ignore Python cache files
 __pycache__/
