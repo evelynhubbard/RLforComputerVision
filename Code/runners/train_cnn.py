@@ -1,24 +1,26 @@
 from models import ResNetModel
-from datasets import load_tiny_imagenet
 import tensorflow as tf
 
 
-def train_CNN(train_dataset, val_dataset, output_model_path, epochs=10, batch_size=23, augment=True):
+def train_CNN(tall_resnet, train_dataset, val_dataset, output_model_path, epochs=10, batch_size=23, augment=True):
     """
-    Trains a ResNet-50 model on the Tiny ImageNet dataset.
+    Fine tunes pre-trained ResNet-50 model on the dataset.
     """
-    # Load the Tiny ImageNet dataset
-    
-    tall_resnet = ResNetModel(input_shape=(224, 224, 3), num_classes=200, trainable=False)
     tall_resnet.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-        loss="sparse_categorical_crossentropy",
+        loss="categorical_crossentropy",
         metrics=["accuracy"]
     )
-    # history = tall_resnet.train(
-    #     train_dataset,val_dataset,epochs=epochs, 
-    #     callbacks = []
-    # )
+    
+    tall_resnet.train(train_dataset, val_dataset, epochs=epochs, batchsize=batch_size)
+
+    tall_resnet.fit(
+        train_dataset,
+        validation_data=val_dataset,
+        epochs=epochs,
+        callbacks=[],
+    )
+
     tall_resnet.save(output_model_path)
     print(f"Model saved at {output_model_path}")
 

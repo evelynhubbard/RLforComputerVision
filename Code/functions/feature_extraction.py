@@ -1,14 +1,13 @@
 import numpy as np
-from models.resnet import ResNetModel
 import tensorflow as tf
 
-def extract_feature_maps(model_name, model, layer_name, dataset):
+def extract_feature_maps(model_name, resnet, layer_name, dataset):
     """
     Extract feature maps from a pre-trained model.
     """
     feature_extractor = tf.keras.Model(
-        inputs = model.model.input,
-        outputs = model.model.get_layer(layer_name).output)
+        inputs = resnet.model.input,
+        outputs = resnet.model.get_layer(layer_name).output)
 
     feature_maps = []
     labels = []

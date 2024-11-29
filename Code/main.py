@@ -1,89 +1,178 @@
-import argparse
-from runners.train_cnn import train_CNN
+from runners import *
+import os
+import numpy as np
 from functions import *
-from runners.train_secondary import train_secondary_classifier
-from runners.evaluate import evaluate_model
-from datasets.tiny_imagenet import *
-import tensorflow as tf
-from models.resnet import ResNetModel
-from models.secondary_classifier_NN import SecondaryClassifier_NN
-#FOR 4 CLASSES
-SELECTED_CLASSES = ["n01443537", "n01629819", "n01641577", "n01644900"]
-# Paths
-RAW_TRAIN_PATH = "Code/data/raw/tiny-imagenet-200/train"
-RAW_VAL_PATH = "Code/data/raw/tiny-imagenet-200/val"
-STRUCTURED_TRAIN_PATH = "Code/data/processed/tiny-imagenet-200/structured_train"
-STRUCTURED_VAL_PATH = "Code/data/processed/tiny-imagenet-200/structured_val"
-VAL_ANNOTATIONS_FILE = "Code/data/raw/tiny-imagenet-200/val/val_annotations.txt"
-PRIMARY_MODEL_PATH = "Code/models/resnet_model.h5"
-SECONDARY_MODEL_PATH = "Code/models/secondary_classifier_NN.h5"
+from datasets.imageNet import *
+from utils import add_date_time_to_path
+from models import *
 
+#FOR 4 CLASSES
+#SELECTED_CLASSES = ["n01443537", "n01774384", "n02002724", "n07873807", "n04398044"]
+# Paths
+# RAW_TRAIN_PATH = "Code/data/raw/tiny-imagenet-200/train"
+# RAW_VAL_PATH = "Code/data/raw/tiny-imagenet-200/val"
+# STRUCTURED_TRAIN_PATH = "Code/data/processed/tiny-imagenet-200/structured_train"
+# STRUCTURED_VAL_PATH = "Code/data/processed/tiny-imagenet-200/structured_val"
+#VAL_ANNOTATIONS_FILE = "Code/data/raw/tiny-imagenet-200/val/val_annotations.txt"
+# PRIMARY_MODEL_PATH = "Code/models/resnet_model/16batch5Class.h5"
+# SECONDARY_MODEL_PATH = "Code/models/secondary_classifier_NN/16batch5Class.h5"
+
+RAW_PATH = "Code/data/raw/ImageNet"
+STRUCTURED_TRAIN_PATH = "Code/data/processed/ImageNet/structured_train"
+STRUCTURED_VAL_PATH = "Code/data/processed/ImageNet/structured_val"
+STRUCTURED_TEST_PATH = "Code/data/processed/ImageNet/structured_test"
+
+PRIMARY_MODEL_PATH = add_date_time_to_path("Code/models/resnet_model/ImageNet/16batch5Class.h5")
+SECONDARY_MODEL_PATH = add_date_time_to_path("Code/models/secondary_classifier_NN/ImageNet/16batch5Class.h5")
+
+
+NUM_CLASSES = 4
 EPOCHS = 10
 BATCH_SIZE = 32
-AUGMENT = True
+AUGMENT = False
 EXTRACT_LAYER_NAME = "conv5_block3_out"
 
-def main(retrain = False):
-    """
-    Main function to execute the training and evaluation workflow.
-    """
-    print("Restructure the dataset...")
-    restructure_tiny_dataset(
-        selected_classes=SELECTED_CLASSES,
-        train_data_path=RAW_TRAIN_PATH, 
-        structured_train_path=STRUCTURED_TRAIN_PATH,
-        val_data_path=RAW_VAL_PATH,
-        structured_val_path=STRUCTURED_VAL_PATH,
-        val_annotations_file=VAL_ANNOTATIONS_FILE,
-    )
-    print("Summarizing the dataset...")
-    num_train_classes, num_train_images = summarize_dataset(STRUCTURED_TRAIN_PATH)
-    num_val_classes, num_val_images = summarize_dataset(STRUCTURED_VAL_PATH)
-    print(f"Structured Training Dataset: {num_train_classes} classes, {num_train_images} images.")
-    print(f"Structured Validation Dataset: {num_val_classes} classes, {num_val_images} images.")
-
-    print("Loading the dataset...")
-    train_dataset, val_dataset = load_tiny_imagenet(
-        train_data_path=STRUCTURED_TRAIN_PATH,
-        val_data_path=STRUCTURED_VAL_PATH,
-        batch_size = BATCH_SIZE, 
-        augment=AUGMENT)
+def main(retrain_cnn, retrain_classifier):
     
-    # print("Training the primary CNN...")
-    # train_CNN(
-    #     train_dataset=train_dataset,
-    #     val_dataset=val_dataset,
-    #     output_model_path=PRIMARY_MODEL_PATH,
-    #     epochs=EPOCHS,
-    #     batch_size=BATCH_SIZE,
-    #     augment=AUGMENT
-    # )
-    # print(f"Primary model saved to Code/models/resnet_model.h5")
+    if retrain_cnn or retrain_classifier:
+        print("Restructure the dataset...")
+        # restructure_tiny_dataset(
+        #     selected_classes=SELECTED_CLASSES,
+        #     train_data_path=RAW_TRAIN_PATH, 
+        #     structured_train_path=STRUCTURED_TRAIN_PATH,
+        #     val_data_path=RAW_VAL_PATH,
+        #     structured_val_path=STRUCTURED_VAL_PATH,
+        #     val_annotations_file=VAL_ANNOTATIONS_FILE,
+        #)
+        restructure_imageNet(
+            data_path=RAW_PATH,
+            structured_train_path=STRUCTURED_TRAIN_PATH,
+            structured_val_path=STRUCTURED_VAL_PATH,
+            structured_test_path=STRUCTURED_TEST_PATH,
+        )
+        print("Summarizing the dataset...")
+        num_train_classes, num_train_images = summarize_dataset(STRUCTURED_TRAIN_PATH)
+        num_val_classes, num_val_images = summarize_dataset(STRUCTURED_VAL_PATH)
+        num_test_classes, num_test_images = summarize_dataset(STRUCTURED_TEST_PATH)
 
-    resnet_model = ResNetModel()
-    resnet_model.load(PRIMARY_MODEL_PATH)
-    train_features, train_labels = extract_feature_maps("RESNET", resnet_model, EXTRACT_LAYER_NAME, train_dataset)
-    val_features, val_labels = extract_feature_maps("RESNET", resnet_model, EXTRACT_LAYER_NAME, val_dataset)
+        print(f"Structured Training Dataset: {num_train_classes} classes, {num_train_images} images.")
+        print(f"Structured Validation Dataset: {num_val_classes} classes, {num_val_images} images.")
+        print(f"Structured Test Dataset: {num_test_classes} classes, {num_test_images} images.")
 
-    print(f"Train features shape: {train_features.shape}")
-    print(f"Train labels shape: {train_labels.shape}")
+        print("Loading the train and val dataset...")
+        # train_dataset, val_dataset = load_tiny_imagenet(
+        #     train_data_path=STRUCTURED_TRAIN_PATH,
+        #     val_data_path=STRUCTURED_VAL_PATH,
+        #     batch_size = BATCH_SIZE, 
+        #     augment=AUGMENT)
+        train_dataset = load_imageNet(
+            data_path=STRUCTURED_TRAIN_PATH,
+            image_size=(224,224),
+            batch_size=BATCH_SIZE,
+            augment=AUGMENT
+        )
+        val_dataset = load_imageNet(
+            data_path=STRUCTURED_VAL_PATH,
+            image_size=(224,224),
+            batch_size=BATCH_SIZE,
+            augment=AUGMENT
+        )
+    
+    resnet_model = ResNetModel(input_shape=(224, 224, 3), num_classes=4, trainable=True, output_layer_name=None)
 
-    # print("Training the secondary classifier...")
-    # accuracy = train_secondary_classifier(
-    #     train_features,
-    #     train_labels,
-    #     val_features,
-    #     val_labels,
-    #     output_model_path=SECONDARY_MODEL_PATH,
-    #     epochs=EPOCHS,
-    #     batch_size=BATCH_SIZE,
-    #     augment=AUGMENT
-    # # )
-    # print(f"Secondary classifier trained and saved to Code/models/secondary_classifier.pkl")
-    # print(f"Validation Accuracy of Secondary Classifier: {accuracy:.2f}")
+    if retrain_cnn:
+        print("Training the primary CNN...")
+        train_CNN(
+            tall_resnet = resnet_model,
+            train_dataset=train_dataset,
+            val_dataset=val_dataset,
+            output_model_path=PRIMARY_MODEL_PATH,
+            epochs=EPOCHS,
+            batch_size=BATCH_SIZE,
+            augment=AUGMENT
+        )
+        print(f"Primary model saved to {PRIMARY_MODEL_PATH}")
+    else:
+        resnet_model.load(PRIMARY_MODEL_PATH)
+
     classifier_model = SecondaryClassifier_NN()
-    classifier_model.load(SECONDARY_MODEL_PATH)
 
+    if retrain_classifier:
+        train_features, train_labels = extract_feature_maps("RESNET", resnet_model, EXTRACT_LAYER_NAME, train_dataset)
+        val_features, val_labels = extract_feature_maps("RESNET", resnet_model, EXTRACT_LAYER_NAME, val_dataset)
+
+        print(f"Train features shape: {train_features.shape}")
+        print(f"Train labels shape: {train_labels.shape}")
+
+        print("Training the secondary classifier...")
+        train_secondary_classifier(
+            classifier_model,
+            train_features,
+            train_labels,
+            val_features,
+            val_labels,
+            output_model_path=SECONDARY_MODEL_PATH,
+            epochs=EPOCHS,
+            batch_size=BATCH_SIZE,
+            augment=AUGMENT
+        )
+        print(f"Secondary classifier trained and saved to Code/models/secondary_classifier.pkl")
+    else:
+        classifier_model.load(SECONDARY_MODEL_PATH)
+    
+    # q_classifier = QClassifier(num_actions = 3, learning_rate = 0.3, discount_rate = 0.4)
+    # if retrain_q-learning:
+    #     pass
+    # else:
+    #     q_classifier.load(Q_LEARNING_MODEL)
+
+    # ##BEGIN TESTING PHASE
+    test_dataset = load_imageNet(
+        data_path=STRUCTURED_TEST_PATH,
+        image_size=(224,224),
+        batch_size=BATCH_SIZE,
+        augment=False
+    )
+    
+    basic_accuracy = basic_classify_test(resnet_model.model, test_dataset)
+    print(f"Basic accuracy: {basic_accuracy:.2f}")
+
+    # marked_hard_dataset = get_marked_hard_images(resnet_model, test_dataset)
+
+    # Q_accuracy = RL_classify_test(resnet_model, classifier_model, q_classifier, marked_hard_dataset, test_dataset)
+    #for image in hard_to_classify set:
+    
+        
+        #RL based classification:
+        #random actions selected
+        #action applied
+        #new feature map extracted
+        # current state is decided after observing standard deviation of predictions scores
+        #reward is given based on the change in prediction score
+        #number of iterations for updating Q-table is axm = 20
+        #alpha = 0.4
+        #discount rate = 0.3
+        #after 20 iterations, the action with the highest Q-value is selected
+        #this action is applied to the image
+        #the new feature map is extracted
+        #the new feature map is classified
+        
+    #extract feature map
+    
+
+    #RL based classification:
+        #random actions selected
+        #action applied
+        #new feature map extracted
+        # current state is decided after observing standard deviation of predictions scores
+        #reward is given based on the change in prediction score
+        #number of iterations for updating Q-table is axm = 20
+        #alpha = 0.4
+        #discount rate = 0.3
+        #after 20 iterations, the action with the highest Q-value is selected
+        #this action is applied to the image
+        #the new feature map is extracted
+        #the new feature map is classified
     # Step 4: Evaluate the primary CNN
     print("Evaluating the primary CNN...")
     evaluate_model(
@@ -98,69 +187,38 @@ def main(retrain = False):
     #     dataset=val_dataset,
     #     is_primary=False,
     # )
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train or load the primary CNN model.")
-    parser.add_argument(
-        "--retrain",
-        action="store_true",
-        help="Retrain the model instead of using the saved model.",
-    )
-    args = parser.parse_args()
-    main(retrain=args.retrain)
-
-
-# # print("Image array shape:", img_array.shape)
-# if __name__ == "__main__":
+    print("Do you want to retrain or load the CNN? (t/l)")
+    cnn_choice = input().strip().lower()
     
-#     tall_resnet_model = get_tall_resnet_CNN()  # Call model creation function
-#     history = train_CNN(tall_resnet_model, train_dataset, val_dataset)
-#     tall_resnet_model.save('tall_resnet_trained_model.h5')
+    if cnn_choice == "t":
+        # Display details for retraining
+        dataset = os.path.basename(RAW_PATH)
+        print(f"Training on dataset:  '{dataset}'")
+        print(f"Epochs: '{EPOCHS}'") 
+        retrain_cnn = True
+    elif cnn_choice == "l":
+        print(f"CNN loaded from {PRIMARY_MODEL_PATH}")
+        retrain_cnn = False
+    else:
+        print("Invalid choice. Please restart and choose 't' for retrain or 'l' for load.")
+        exit(1)
 
-#     feature_extractor = tf.keras.Model(
-#             inputs=tall_resnet_model.input,
-#             outputs=tall_resnet_model.get_layer('global_average_pooling2d').output  # Change if needed
-#     )
-#     train_features, train_labels = extract_feature_maps(train_dataset, feature_extractor)
-#     val_features, val_labels = extract_feature_maps(val_dataset, feature_extractor)
+    print("Do you want to retrain or load the classifying structure? (t/l)")
+    classifier_choice = input().strip().lower()
 
-
-# # Initialize and train ResNet-based model
-# resnet_model = ResNetModel(input_shape=(224, 224, 3), num_classes=4, trainable=False)
-# resnet_model.compile(optimizer="adam")
-# resnet_model.train(train_dataset, val_dataset, epochs=10)
-# resnet_model.save("resnet_model.h5")
-
-# # Initialize and compile Q-Network
-# q_network = QNetwork(num_actions=10)
-# q_network.compile(optimizer="adam")
-# q_network.save("q_network_model.h5")
-
-# # Initialize and train Secondary Classifier
-# features = np.random.rand(100, 512)  # Example feature map
-# labels = np.random.randint(0, 4, size=(100,))  # Example labels
-
-# secondary_classifier = SecondaryClassifier(kernel="linear")
-# secondary_classifier.train(features, labels)
-# accuracy = secondary_classifier.evaluate(features, labels)
-# print(f"Secondary Classifier Accuracy: {accuracy:.2f}")
-
-
-# print(f"Train features shape: {train_features.shape}")
-# print(f"Validation features shape: {val_features.shape}")
-
-
-
-
-# feature_map = tall_resnet.predict(img_array)
-# print("Feature map shape:", feature_map.shape)
-#basic_resnet = tf.keras.applications.ResNet50(weights="imagenet")
-
-#tall_resnet.summary()
-
-# feature_map = tall_resnet.predict(img_array)
-
-# # Decode predictions
-# decoded_predictions = tf.keras.applications.imagenet_utils.decode_predictions(predictions, top=3)  # Top 3 predictions
-# for i, (imagenet_id, label, score) in enumerate(decoded_predictions[0]):
-#     print(f"{i+1}: {label} ({score:.2f})")
-
+    if classifier_choice == "t":
+        print(f"Retraining NN on feature maps from CNN layer '{EXTRACT_LAYER_NAME}'")
+        retrain_classifier = True
+    elif classifier_choice == "l":
+        print(f"Classifier loaded from {SECONDARY_MODEL_PATH}")
+        retrain_classifier = False
+    else:
+        print("Invalid choice. Please restart and choose 't' for retrain or 'l' for load.")
+        exit(1)
+    # Call main with appropriate variables
+    main(
+        retrain_cnn=retrain_cnn,
+        retrain_classifier=retrain_classifier,
+    )
