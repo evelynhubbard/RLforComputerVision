@@ -1,25 +1,37 @@
-project_root/
-├── data/               # Folder for storing datasets
-│   ├── raw/            # Raw data files
-│   └── processed/      # Preprocessed data ready for use
-├── models/             # Pre-trained models and custom network layers
-│   ├── resnet.py       # Pre-trained ResNet-50 setup
-│   ├── inception.py    # Pre-trained Inception V3 setup
-│   └── custom_q_net.py # Custom layers for Q-learning
-├── q_learning/         # Folder for Q-learning-related code
-│   ├── q_learning.py   # Core Q-learning implementation
-│   ├── replay_buffer.py # Replay buffer implementation (if applicable)
-│   └── utils.py        # Helper functions for Q-learning
-├── experiments/        # Scripts for running different experiments
-│   ├── train.py        # Main training script
-│   └── evaluate.py     # Evaluation script
-├── notebooks/          # Jupyter Notebooks for experimentation/visualization
-│   └── exploration.ipynb
-├── logs/               # Logging and training artifacts
-│   └── tensorboard/    # TensorBoard logs for visualization
-├── results/            # Folder for saving results or models
-├── tests/              # Unit and integration tests
-│   └── test_q_learning.py
-├── requirements.txt    # Python dependencies
-├── README.md           # Documentation
-└── main.py             # Entry point for the project
+FINALPROJECT/
+├── 626FinalProject_venv/      # Python virtual environment
+├── checkpoints/               # Directory for storing model checkpoints
+├── Code/                      # Main project codebase
+│   ├── configs/               # Configuration files
+│   │   └── tiny-imageNet.yml  # YAML file for Tiny ImageNet configurations
+│   ├── data/                  # Dataset-related files
+│   │   ├── processed/         # Processed datasets (ready for use)
+│   │   ├── raw/               # Raw datasets (original structure)
+│   │   └── __init__.py        # Makes `data` an importable module
+│   ├── datasets/              # Dataset utilities and loaders
+│   │   ├── __init__.py        # Makes `datasets` an importable module
+│   │   └── tiny_imagenet.py   # Functions for Tiny ImageNet restructuring, loading, summarization
+│   ├── functions/             # General-purpose utility functions
+│   │   ├── __init__.py        # Makes `functions` an importable module
+│   │   ├── feature_extraction.py  # Feature extraction utilities
+│   │   ├── losses.py          # Custom loss functions
+│   │   ├── metrics.py         # Custom metrics for evaluation
+│   │   └── visualization.py   # Functions for data visualization
+│   ├── log/                   # Logs for training and debugging
+│   ├── models/                # Model definitions
+│   │   ├── __pycache__/       # Cached Python files (auto-generated, ignore)
+│   │   ├── __init__.py        # Makes `models` an importable module
+│   │   ├── q_network.py       # Q-Network implementation
+│   │   ├── resnet.py          # ResNet model definition
+│   │   └── secondary_classifier.py  # Secondary classifier definition
+│   ├── results/               # Results from training and evaluation
+│   ├── runners/               # Scripts for running workflows
+│   │   ├── __pycache__/       # Cached Python files (auto-generated, ignore)
+│   │   ├── __init__.py        # Makes `runners` an importable module
+│   │   ├── evaluate.py        # Evaluation workflow
+│   │   ├── train_cnn.py       # Script for training the primary CNN
+│   │   └── train_secondary.py # Script for training the secondary classifier
+│   ├── utils/                 # Miscellaneous utilities
+│   ├── main.py                # Entry point for the project
+│   └── README.txt             # Documentation
+└── requirements.txt           # Python dependencies

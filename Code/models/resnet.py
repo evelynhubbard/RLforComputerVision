@@ -1,13 +1,23 @@
 import tensorflow as tf
-# from tensorflow.keras.applications import ResNet50
-# from tensorflow.keras import layers, Model
-#from tensorflow.keras import layers, Sequential
+from tensorflow.keras.applications import ResNet50 # type: ignore
 
-ResNet50 = tf.keras.applications.ResNet50
-# layers = tf.keras.layers
+class ResNetModel:
+    def __init__(self, input_shape=(224, 224, 3), num_classes=4, trainable=False):
+        """
+        Initializes a ResNet50 model for transfer learning.
 
-def get_tall_resnet_CNN(input_shape=(224, 224, 3), trainable=False):
-    """
+        Args:
+            input_shape (tuple): Shape of the input images.
+            num_classes (int): Number of classes to predict.
+            trainable (bool): If True, the ResNet layers will be trainable.
+        """
+        self.input_shape = input_shape
+        self.num_classes = num_classes
+        self.trainable = trainable
+        self.model = self._build_model()
+
+    def _build_model(self):
+        """
     Returns a ResNet50 model without the top (fully connected) layer.
     Args:
         input_shape (tuple): Shape of the input images.
@@ -15,53 +25,65 @@ def get_tall_resnet_CNN(input_shape=(224, 224, 3), trainable=False):
     Returns:
         keras.Model: ResNet50 base model without top.
     """
-    base_model = ResNet50(weights="imagenet", include_top=False, input_shape=input_shape)
-    # Freeze the layers if trainable is set to False
-    base_model.trainable = trainable
+        base_model = ResNet50(
+            include_top=True,
+            weights='imagenet',
+            input_shape=self.input_shape,
+        )
+        base_model.trainable = self.trainable
+        # realised this doesn't go here
+        # model = tf.keras.Sequential([
+        #     base_model,
+        #     tf.keras.layers.GlobalAveragePooling2D(),
+        #     tf.keras.layers.Dense(1024,activation='relu'),
+        #     tf.keras.layers.Dense(1024,activation='relu'),
+        #     tf.keras.layers.Dense(1024,activation='relu'),
+        #     tf.keras.layers.Dense(512,activation='relu'),
+        #     tf.keras.layers.Dense(self.num_classes,activation='softmax'), #30 is number of classes
+        # ])
 
-    tall_model = tf.keras.Sequential([
-        base_model,
-        tf.keras.layers.GlobalAveragePooling2D(),
-        tf.keras.layers.Dense(1024,activation='relu'),
-        tf.keras.layers.Dense(1024,activation='relu'),
-        tf.keras.layers.Dense(1024,activation='relu'),
-        tf.keras.layers.Dense(512,activation='relu'),
-        tf.keras.layers.Dense(4,activation='softmax'), #30 is number of classes
-    ])
+        return base_model
+    
+    def get_layer(self, layer_name):
+        return self.model.get_layer(layer_name)
 
-    return tall_model
+    def compile(self, optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy']):
+        """
+        Configures the model for training.
 
+        Args:
+            optimizer (str): Name of the optimizer.
+            loss (str): Name of the loss function.
+            metrics (list): List of evaluation metrics.
+        """
+        self.model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+    
+    def train(self, train_data, val_data, epochs=10, callbacks=None):
+        """
+        Trains the model on the given data.
 
+        Args:
+            train_data (tf.data.Dataset): Training data.
+            val_data (tf.data.Dataset): Validation data.
+            epochs (int): Number of epochs to train.
+            callbacks (list): List of Keras callbacks.
+        """
+        self.model.fit(train_data, validation_data=val_data, epochs=epochs, callbacks=callbacks)
 
-def custom_q_network(num_actions=10, input_shape=(224, 224, 3)):
-    """
-    Creates a custom Q-network using ResNet-50 as the base feature extractor.
+    def save(self, filepath):
+        """
+        Saves the model to the given filepath.
 
-    Parameters:
-    - num_actions (int): Number of Q-values to predict (one per action).
-    - input_shape (tuple): Shape of the input images (height, width, channels).
+        Args:
+            filepath (str): Filepath to save the model.
+        """
+        self.model.save(filepath)
+    
+    def load(self, filepath):
+        """
+        Loads the model from the given filepath.
 
-    Returns:
-    - Model: A TensorFlow Keras model for Q-value prediction.
-    """
-    # Load the pre-trained ResNet-50 model
-    base_model = ResNet50(
-                    include_top=False,
-                    weights='imagenet',
-                    input_tensor=None,
-                    input_shape=None,
-                    pooling=None,
-                    classes=1000,
-                    classifier_activation='softmax')
-
-    # Freeze the base model layers
-    base_model.trainable = False
-
-    # Add custom Q-network layers on top
-    x = layers.Flatten()(base_model.output)  # Flatten feature maps
-    x = layers.Dense(256, activation='relu')(x)  # Dense layer with 256 units
-    q_values = layers.Dense(num_actions)(x)  # Output layer with Q-values
-
-    # Define the final model
-    model = Model(inputs=base_model.input, outputs=q_values)
-    return model
+        Args:
+            filepath (str): Filepath to load the model.
+        """
+        self.model = tf.keras.models.load_model(filepath)

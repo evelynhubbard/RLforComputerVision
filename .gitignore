@@ -1,17 +1,39 @@
 # Ignore virtual environment
 626FinalProject_venv/
+*.env
 
 # Ignore datasets
 Code/data
-# Allow only the processed data directory
-!Code/data/processed/
-!Code/data/processed/**
+
+# Checkpoints and saved models
+checkpoints/
+Code/models/primary/*.h5
+Code/models/secondary/*.pkl
+
+# Datasets (raw and processed)
+Code/data/raw/
+Code/data/processed/
+
+# Ignore logs
+logs/
 
 # Ignore Python cache files
 __pycache__/
 *.pyc
+# Byte-compiled / optimized / DLL files
+*.pyo
+*.pyd
+
+Code/runners/evaluate.py
+
 
 # Ignore IDE/project-specific files
 .vscode/
 
 Report/
+
+.ipynb_checkpoints/
+
+tall_resnet_trained_model.h5
+secondary_classifier_NN.h5
+*.h5
