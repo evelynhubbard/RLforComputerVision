@@ -1,6 +1,7 @@
 # Ignore virtual environment
 626FinalProject_venv/
 *.env
+venv_forpython10/
 
 # Ignore datasets
 Code/data

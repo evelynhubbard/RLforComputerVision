@@ -56,15 +56,17 @@ def basic_classify_test(model, test_dataset):
     num_total = 0
 
     for images, labels in test_dataset:
-        predictions = model.predict(images)
-        predicted_classes = np.argmax(predictions, axis=1)
-        true_classes = np.argmax(labels, axis=1)
-
-        num_correct += np.sum(predicted_classes == true_classes)
+        predictions = model.predict(images, verbose=0)
+        predicted_classes = tf.argmax(predictions, axis=1).numpy()
+        true_classes = tf.argmax(labels, axis=1).numpy()
+        num_correct += (predicted_classes == true_classes).sum()
         num_total += len(true_classes)
-
+    
     accuracy = num_correct / num_total
+
     return accuracy
+
+
 
 def RL_classify_test(resnet_model, classifier_model, q_classifier, marked_hard_dataset, test_dataset):
     """

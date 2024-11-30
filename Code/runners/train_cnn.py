@@ -14,13 +14,6 @@ def train_CNN(tall_resnet, train_dataset, val_dataset, output_model_path, epochs
     
     tall_resnet.train(train_dataset, val_dataset, epochs=epochs, batchsize=batch_size)
 
-    tall_resnet.fit(
-        train_dataset,
-        validation_data=val_dataset,
-        epochs=epochs,
-        callbacks=[],
-    )
-
     tall_resnet.save(output_model_path)
     print(f"Model saved at {output_model_path}")
 

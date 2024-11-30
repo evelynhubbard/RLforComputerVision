@@ -17,14 +17,18 @@ from models import *
 # PRIMARY_MODEL_PATH = "Code/models/resnet_model/16batch5Class.h5"
 # SECONDARY_MODEL_PATH = "Code/models/secondary_classifier_NN/16batch5Class.h5"
 
+
 RAW_PATH = "Code/data/raw/ImageNet"
 STRUCTURED_TRAIN_PATH = "Code/data/processed/ImageNet/structured_train"
 STRUCTURED_VAL_PATH = "Code/data/processed/ImageNet/structured_val"
 STRUCTURED_TEST_PATH = "Code/data/processed/ImageNet/structured_test"
+LABEL_MAPPING_PATH = "Code/data/processed/ImageNet/labelmappins.txt"
 
-PRIMARY_MODEL_PATH = add_date_time_to_path("Code/models/resnet_model/ImageNet/16batch5Class.h5")
-SECONDARY_MODEL_PATH = add_date_time_to_path("Code/models/secondary_classifier_NN/ImageNet/16batch5Class.h5")
+NEW_PRIMARY_MODEL_PATH = add_date_time_to_path("Code/models/resnet_model/ImageNet",".weights.h5")
+CURRENT_PRIMARY_MODEL_PATH = "Code/models/resnet_model/ImageNet/2024-11-29_23-18-07.weights.h5"
 
+NEW_SECONDARY_MODEL_PATH = add_date_time_to_path("Code/models/secondary_classifier_NN/ImageNet",".weights.h5")
+CURRENT_SECONDARY_MODEL_PATH = "Code/models/secondary_classifier_NN/ImageNet/2024-11-29_21-49-42.weights.h5"
 
 NUM_CLASSES = 4
 EPOCHS = 10
@@ -49,6 +53,7 @@ def main(retrain_cnn, retrain_classifier):
             structured_train_path=STRUCTURED_TRAIN_PATH,
             structured_val_path=STRUCTURED_VAL_PATH,
             structured_test_path=STRUCTURED_TEST_PATH,
+            label_mapping_path = LABEL_MAPPING_PATH
         )
         print("Summarizing the dataset...")
         num_train_classes, num_train_images = summarize_dataset(STRUCTURED_TRAIN_PATH)
@@ -65,60 +70,63 @@ def main(retrain_cnn, retrain_classifier):
         #     val_data_path=STRUCTURED_VAL_PATH,
         #     batch_size = BATCH_SIZE, 
         #     augment=AUGMENT)
-        train_dataset = load_imageNet(
+        batched_train_dataset = load_imageNet(
             data_path=STRUCTURED_TRAIN_PATH,
             image_size=(224,224),
             batch_size=BATCH_SIZE,
             augment=AUGMENT
         )
-        val_dataset = load_imageNet(
+        batched_val_dataset = load_imageNet(
             data_path=STRUCTURED_VAL_PATH,
             image_size=(224,224),
             batch_size=BATCH_SIZE,
             augment=AUGMENT
         )
     
-    resnet_model = ResNetModel(input_shape=(224, 224, 3), num_classes=4, trainable=True, output_layer_name=None)
+    resnet_model = ResNetModel(input_shape=(224, 224, 3), num_classes=NUM_CLASSES, trainable=True)
 
     if retrain_cnn:
         print("Training the primary CNN...")
         train_CNN(
             tall_resnet = resnet_model,
-            train_dataset=train_dataset,
-            val_dataset=val_dataset,
-            output_model_path=PRIMARY_MODEL_PATH,
+            train_dataset=batched_train_dataset,
+            val_dataset=batched_val_dataset,
+            output_model_path=NEW_PRIMARY_MODEL_PATH,
             epochs=EPOCHS,
             batch_size=BATCH_SIZE,
             augment=AUGMENT
         )
-        print(f"Primary model saved to {PRIMARY_MODEL_PATH}")
+        print(f"Primary model saved to {NEW_PRIMARY_MODEL_PATH}")
     else:
-        resnet_model.load(PRIMARY_MODEL_PATH)
+        resnet_model.load(CURRENT_PRIMARY_MODEL_PATH)
 
-    classifier_model = SecondaryClassifier_NN()
+    classifier_model = SecondaryClassifier_NN(input_shape = (7,7,2048), num_classes=NUM_CLASSES, trainable = True)
 
     if retrain_classifier:
-        train_features, train_labels = extract_feature_maps("RESNET", resnet_model, EXTRACT_LAYER_NAME, train_dataset)
-        val_features, val_labels = extract_feature_maps("RESNET", resnet_model, EXTRACT_LAYER_NAME, val_dataset)
+        train_features_set = extract_feature_maps("RESNET", resnet_model, EXTRACT_LAYER_NAME, batched_train_dataset)
+        val_features_set = extract_feature_maps("RESNET", resnet_model, EXTRACT_LAYER_NAME, batched_val_dataset)
 
-        print(f"Train features shape: {train_features.shape}")
-        print(f"Train labels shape: {train_labels.shape}")
+        #print(f"Train features shape: {train_features_set.shape}")
+        #print(f"Train labels shape: {train_labels.shape}")
 
         print("Training the secondary classifier...")
         train_secondary_classifier(
             classifier_model,
-            train_features,
-            train_labels,
-            val_features,
-            val_labels,
-            output_model_path=SECONDARY_MODEL_PATH,
+            train_features_set,
+            val_features_set,
+            # train_features,
+            # train_labels,
+            # val_features,
+            # val_labels,
+            output_model_path=NEW_SECONDARY_MODEL_PATH,
             epochs=EPOCHS,
             batch_size=BATCH_SIZE,
             augment=AUGMENT
         )
+
         print(f"Secondary classifier trained and saved to Code/models/secondary_classifier.pkl")
     else:
-        classifier_model.load(SECONDARY_MODEL_PATH)
+        classifier_model.load(CURRENT_SECONDARY_MODEL_PATH)
     
     # q_classifier = QClassifier(num_actions = 3, learning_rate = 0.3, discount_rate = 0.4)
     # if retrain_q-learning:
@@ -135,9 +143,15 @@ def main(retrain_cnn, retrain_classifier):
     )
     
     basic_accuracy = basic_classify_test(resnet_model.model, test_dataset)
-    print(f"Basic accuracy: {basic_accuracy:.2f}")
 
-    # marked_hard_dataset = get_marked_hard_images(resnet_model, test_dataset)
+    resnet_model.compile( optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    accuracy = resnet_model.model.evaluate(test_dataset)
+
+    print(f"Primary Model Accuracy: {accuracy}")
+    print(f"Basic accuracy: {basic_accuracy}")
+
+    marked_hard_vector = get_marked_hard_images(resnet_model, test_dataset)
+    
 
     # Q_accuracy = RL_classify_test(resnet_model, classifier_model, q_classifier, marked_hard_dataset, test_dataset)
     #for image in hard_to_classify set:
@@ -174,12 +188,12 @@ def main(retrain_cnn, retrain_classifier):
         #the new feature map is extracted
         #the new feature map is classified
     # Step 4: Evaluate the primary CNN
-    print("Evaluating the primary CNN...")
-    evaluate_model(
-        model_path="Code/models/resnet_model.h5",
-        dataset=val_dataset,
-        is_primary=True,
-    )
+    # print("Evaluating the primary CNN...")
+    # evaluate_model(
+    #     model_path="Code/models/resnet_model.h5",
+    #     dataset=single_val_dataset,
+    #     is_primary=True,
+    # )
 
     # print("Evaluating the secondary classifier...")
     # evaluate_model(
@@ -199,7 +213,7 @@ if __name__ == "__main__":
         print(f"Epochs: '{EPOCHS}'") 
         retrain_cnn = True
     elif cnn_choice == "l":
-        print(f"CNN loaded from {PRIMARY_MODEL_PATH}")
+        print(f"CNN loaded from {CURRENT_PRIMARY_MODEL_PATH}")
         retrain_cnn = False
     else:
         print("Invalid choice. Please restart and choose 't' for retrain or 'l' for load.")
@@ -212,7 +226,7 @@ if __name__ == "__main__":
         print(f"Retraining NN on feature maps from CNN layer '{EXTRACT_LAYER_NAME}'")
         retrain_classifier = True
     elif classifier_choice == "l":
-        print(f"Classifier loaded from {SECONDARY_MODEL_PATH}")
+        print(f"Classifier loaded from {CURRENT_SECONDARY_MODEL_PATH}")
         retrain_classifier = False
     else:
         print("Invalid choice. Please restart and choose 't' for retrain or 'l' for load.")
