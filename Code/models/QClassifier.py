@@ -1,61 +1,54 @@
 import numpy as np
+from functions import q_helper
+import os
+import tensorflow as tf
 
 class QClassifier:
     #initiate 2-state Q-learning class
-    def __init__(self, num_actions = 3, learning_rate = 0.3, discount_rate = 0.4):
+    def __init__(self, q_table_dir, num_actions = 3, learning_rate = 0.3, discount_rate = 0.4):
         self.num_actions = num_actions
         self.learning_rate = learning_rate
         self.discount_rate = discount_rate
         self.num_iterations = self.num_actions * 20
-        self.q_table = np.zeros((2, num_actions))
+        self.q_table_dir = q_table_dir #2 states
 
-    def load(self, filepath):
+    def load_q_table(self, image_idx):
         #load Q-table from file
-        #TODO: Implement this function
-        self.q_table = np.load(filepath)
+        q_table_filepath = os.path.join(self.q_table_dir, f"q_table_{image_idx}.npy")
+        if not os.path.exists(q_table_filepath):
+            raise FileNotFoundError(f"Q-table for image {image_idx} not found at {q_table_filepath}")
+        return np.load(q_table_filepath)
 
-    def update_q_table(self, state, action, reward, next_state):
-        #update Q-table based on the reward
-        self.q_table[state, action] += self.learning_rate * (reward + self.discount_rate * np.max(self.q_table[next_state]) - self.q_table[state, action])
-        
-    def random_select_action(self, state):
-        #randomly select an action
-        return np.random.choice(self.num_actions)
+    
+    def classify_image(self, image, image_idx, resnet, secondary_classifier):
+        #image is batch...
+        # for image in images:
+            # current_state = 0
 
-    def classify_image(self, image, secondary_classifier, actions, cnn_model, f_sample):
-        #classify image using Q-learning
-        #should output a class
-        #TODO: Implement this function
-        # state = 0  # Start with initial state
-        # for i in range(self.num_iterations):
-        #     # Select an action randomly
-        #     action = self.random_select_action(state)
+            # f_sample = resnet.extract_features(image, 'conv5_block3_out')
+            # initial_M = q_helper.getM(secondary_classifier, f_sample)
 
-        #     # Apply action (e.g., rotation, translation)
-        #     transformed_image = actions[action](image)
+            # for i in range(self.num_iterations):
+            #     action_i = np.random.randint(0,self.num_actions)
+            #     perm_image= q_helper.apply_action(image, action_i)
+            #     f_prime_sample = resnet.extract_features(perm_image, 'conv5_block3_out')
+            #     new_M = q_helper.getM(secondary_classifier, f_prime_sample)
+            #     reward = q_helper.getReward(initial_M, new_M)
+            #     next_state = 0 if new_M <= initial_M else 1
+            #     self.update_q_table(current_state, action_i, reward, next_state)
+            #     current_state = next_state
+            # Load the pre-trained Q-table for this image
+            q_table = self.load_q_table(image_idx)
+            current_state = 0  # Start with the initial state
 
-        #     # Extract new feature map and metric (M1)
-        #     f_sample = 
-        #     new_predictions = secondary_classifier.predict(feature_map_new)
-        #     metric_m1 = np.std(new_predictions)
+            # Choose the best action based on the Q-table
+            best_action = np.argmax(np.max(q_table))
+            print(f"Best action for image {image_idx}: {best_action}")
 
-        #     # Determine reward and next state
-        #     reward = 1 if metric_m1 < metric_m else -1
-        #     next_state = 0 if metric_m1 <= metric_m else 1
+            # Apply the best action to the image
+            best_image = q_helper.apply_action(image, best_action)
 
-        #     # Update Q-table
-        #     self.update_q_table(state, action, reward, next_state)
-
-        #     # Update current state and metric
-        #     state = next_state
-        #     metric_m = metric_m1
-
-        # # Choose the best action based on the Q-table
-        # best_action = np.argmax(self.q_table[state, :])
-        # final_image = actions[best_action](image)
-
-        # # Perform final classification
-        # final_feature_map = intermediate_model.predict(final_image[np.newaxis, ...])
-        # final_prediction = secondary_classifier.predict(final_feature_map)
-        # return np.argmax(final_prediction)
-        pass
+            # Extract and return the feature map of the best-transformed image
+            feature_map = resnet.extract_features(best_image, 'conv5_block3_out')
+            feature_map = tf.keras.layers.Dense(1024, activation='relu')(feature_map)
+            return feature_map

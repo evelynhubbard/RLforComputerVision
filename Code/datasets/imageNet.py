@@ -3,6 +3,12 @@ import shutil
 import tensorflow as tf
 import random
 import json
+import numpy as np
+
+seed = 42
+random.seed(seed)          # For Python's random module
+np.random.seed(seed)       # For NumPy
+tf.random.set_seed(seed)
 
 def summarize_dataset(dataset_path):
      """
@@ -120,7 +126,8 @@ def load_imageNet(data_path, image_size = (224,224), batch_size = 32, shuffle = 
         label_mode='categorical',
         image_size=image_size,  # ResNet50 input size
         batch_size=batch_size,
-        shuffle = True
+        shuffle = shuffle,
+        seed = 42
      )
      #dataset = dataset.shuffle(buffer_size=1000).batch(32).prefetch(tf.data.AUTOTUNE)
 

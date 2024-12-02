@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.applications import ResNet50 # type: ignore
 
 class ResNetModel:
-    def __init__(self, input_shape=(224, 224, 3), num_classes=5, trainable=True):
+    def __init__(self, input_shape=(150, 150, 3), num_classes=5, trainable=True):
         """
         Initializes a ResNet50 model for transfer learning.
 
@@ -35,12 +35,36 @@ class ResNetModel:
         ])
         return model
     
+    # def extract_features(self, image, layer_name):
+    #     feature_extractor = tf.keras.Model(
+    #         inputs=self.base_model.input,
+    #         outputs=self.base_model.get_layer(layer_name).output
+    #     )
+    #     return feature_extractor(image, training=False)
+    
     def extract_features(self, image, layer_name):
+    # # Ensure the input is a tensor
+
+        # If it's a single image, expand dimensions to create a batch of 1
+        if len(image.shape) == 3:  # Shape is (H, W, C)
+            image = tf.expand_dims(image, axis=0)  # Shape becomes (1, H, W, C)
+
+        # Create the feature extractor
         feature_extractor = tf.keras.Model(
             inputs=self.base_model.input,
             outputs=self.base_model.get_layer(layer_name).output
         )
-        return feature_extractor(image, training=False)
+
+        # Extract features
+        feature_maps = feature_extractor(image, training=False)
+
+        feature_maps = tf.keras.layers.GlobalAveragePooling2D()(feature_maps)
+        # # If it was a single image, remove the batch dimension
+        # if feature_maps.shape[0] == 1:
+        #     feature_maps = tf.squeeze(feature_maps, axis=0)  # Remove batch dimension
+
+        return feature_maps
+
 
     def compile(self, optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy']):
         #configures the model for training.
@@ -55,9 +79,22 @@ class ResNetModel:
             callbacks=callbacks)
 
     
-    def save(self, filepath):
-        #Saves the model to the given filepath.
-        self.model.save_weights(filepath)
+    # def save(self, filepath):
+    #     #Saves the model to the given filepath.
+    #     self.model.save_weights(filepath)
+
+    def save_dense_weights(self, filepath):
+        """
+        Saves the weights of the dense layers to the given filepath.
+
+        Args:
+            filepath (str): Path to save the weights.
+        """
+        for layer in self.model.layers:
+            if isinstance(layer, tf.keras.Sequential):
+                layer.save_weights(filepath)
+                break
+
     
     def load(self, filepath):
         #Loads the model from the given filepath.
