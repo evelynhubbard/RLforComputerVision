@@ -1,18 +1,16 @@
 from .feature_extraction import extract_feature_maps
-#from .losses import custom_loss_function, check_label_consistency
-from .metrics import compute_accuracy, compute_precision, compute_recall
-from .visualization import plot_training_curves, plot_feature_maps
-from .get_marked_hard_images import get_marked_hard_images
+from .visualization import save_training_curves, save_feature_maps, show_image_difference
 from .utils import add_date_time_to_path
+from .q_helper import apply_action, getM, getReward, get_marked_hard_images
 
 __all__ = [
     "extract_feature_maps",
-    #"custom_loss_function",
-    "compute_accuracy",
-    "compute_precision",
-    "compute_recall",
-    "plot_training_curves",
-    "plot_feature_maps",
-    "get_marked_hard_images",
+    "save_training_curves",
+    "show_image_difference",
+    "save_feature_maps",
     "add_date_time_to_path",
+    "apply_action",
+    "getM",
+    "getReward",
+    "get_marked_hard_images"
 ]

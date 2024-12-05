@@ -1,232 +1,215 @@
-from runners import *
 import os
+import yaml
+import warnings
 import numpy as np
+from runners import *
 from functions import *
-from datasets.imageNet import *
+from datasets import *
 from models import *
 
-#FOR 4 CLASSES
-#SELECTED_CLASSES = ["n01443537", "n01774384", "n02002724", "n07873807", "n04398044"]
-# Paths
-# RAW_TRAIN_PATH = "Code/data/raw/tiny-imagenet-200/train"
-# RAW_VAL_PATH = "Code/data/raw/tiny-imagenet-200/val"
-# STRUCTURED_TRAIN_PATH = "Code/data/processed/tiny-imagenet-200/structured_train"
-# STRUCTURED_VAL_PATH = "Code/data/processed/tiny-imagenet-200/structured_val"
-#VAL_ANNOTATIONS_FILE = "Code/data/raw/tiny-imagenet-200/val/val_annotations.txt"
-# PRIMARY_MODEL_PATH = "Code/models/resnet_model/16batch5Class.h5"
-# SECONDARY_MODEL_PATH = "Code/models/secondary_classifier_NN/16batch5Class.h5"
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
+warnings.filterwarnings("ignore", message="Skipping variable loading for optimizer")
+
+def load_config(config_path):
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
+
+def setup_pathsparams(config, test_name):
+    paths = {}
+    # ImageNet Data
+    paths['RAW_PATH'] = config['raw_data_path']
+    paths['STRUCTURED_TRAIN_PATH'] = config['structured_train_path']
+    paths['STRUCTURED_VAL_PATH'] = config['structured_val_path']
+    paths['STRUCTURED_TEST_PATH'] = config['structured_test_path']
+    paths['LABEL_MAPPING_PATH'] = config['label_mapping_path']
+
+    # Models
+    paths['NEW_PRIMARY_MODEL_PATH'] = add_date_time_to_path(config['new_primary_model_path'], ".weights.h5")
+    paths['CURRENT_PRIMARY_MODEL_PATH'] = config['current_primary_model_path']
+    paths['NEW_SECONDARY_MODEL_PATH'] = add_date_time_to_path(config['new_secondary_model_path'], ".weights.h5")
+    paths['CURRENT_SECONDARY_MODEL_PATH'] = config['current_secondary_model_path']
+    paths['NEW_Q_LEARNING_MODEL_PATH'] = add_date_time_to_path(config['new_q_learning_model_path'], ".npy")
+    paths['CURRENT_Q_LEARNING_MODEL_PATH'] = config['current_q_learning_model_path']
+
+    # Results
+    paths['RESULTS_PATH'] = os.path.join(config['results_path'], test_name)
+    paths['TRAIN_RESULTS'] = os.path.join(paths['RESULTS_PATH'], "trainplots")
+    paths['TRAIN_FEATURES'] = os.path.join(paths['RESULTS_PATH'], "trainfeatures")
+    paths['PICTURES'] = os.path.join(paths['RESULTS_PATH'], "pictures")
+
+    parameters = {}
+    # Dataset Parameters
+    parameters['NUM_CLASSES'] = config['num_classes']
+    # parameters['SELECTED_CLASSES'] = config['selected_classes']
+
+    # Deep learning Paramaters
+    parameters['EPOCHS'] = config['epochs']
+    parameters['IMAGE_SIZE'] = tuple(config['image_size'])
+    parameters['EXTRACT_LAYER_NAME'] = config['extract_layer_name']
+    parameters['FEATURE_SIZE'] = tuple(config['feature_size'])
+    parameters['BATCH_SIZE'] = config['batch_size']
+    parameters['AUGMENT'] = config['augment']
+    parameters['SHUFFLE'] = config['shuffle']
+
+    # Q-Learning Parameters
+    parameters['NUM_ACTIONS'] = config['num_actions']
+    parameters['LEARNING_RATE'] = config['learning_rate']
+    parameters['DISCOUNT_RATE'] = config['discount_rate']
+    parameters['ITERATION_CONSTANT'] = config['iteration_constant']
+
+    return paths, parameters
 
 
-RAW_PATH = "Code/data/raw/ImageNet"
-STRUCTURED_TRAIN_PATH = "Code/data/processed/ImageNet/structured_train"
-STRUCTURED_VAL_PATH = "Code/data/processed/ImageNet/structured_val"
-STRUCTURED_TEST_PATH = "Code/data/processed/ImageNet/structured_test"
-LABEL_MAPPING_PATH = "Code/data/processed/ImageNet/labelmappins.txt"
+def main(restructure_data, retrain_cnn, retrain_classifier, retrain_q_learning, test_name):
+    config_path = "Code/configs/ImageNet.yml"
+    config = load_config(config_path)
+    paths, parameters = setup_pathsparams(config, test_name)
 
-NEW_PRIMARY_MODEL_PATH = add_date_time_to_path("Code/models/resnet_model/ImageNet",".weights.h5")
-CURRENT_PRIMARY_MODEL_PATH = "Code/models/resnet_model/ImageNet/2024-11-30_22-20-22.weights.h5"
-
-NEW_SECONDARY_MODEL_PATH = add_date_time_to_path("Code/models/secondary_classifier_NN/ImageNet",".weights.h5")
-CURRENT_SECONDARY_MODEL_PATH = "Code/models/secondary_classifier_NN/ImageNet/2024-11-30_20-10-25.weights.h5"
-
-NEW_Q_LEARNING_MODEL_PATH = add_date_time_to_path("Code/models/q_classifier",".npy")
-CURRENT_Q_LEARNING_MODEL_PATH = "Code/models/q_classifier/2024-11-30_20-10-25.npy"
-
-NUM_CLASSES = 4
-EPOCHS = 10
-BATCH_SIZE = 32
-AUGMENT = False
-SHUFFLE = True
-EXTRACT_LAYER_NAME = "conv5_block3_out"
-# EXTRACT_LAYER_NAME = "conv3_block4_out"
-
-def main(restructure_data, retrain_cnn, retrain_classifier, retrain_q_learning):
-    
     if restructure_data:
         print("Restructure the dataset...")
-        # restructure_tiny_dataset(
-        #     selected_classes=SELECTED_CLASSES,
-        #     train_data_path=RAW_TRAIN_PATH, 
-        #     structured_train_path=STRUCTURED_TRAIN_PATH,
-        #     val_data_path=RAW_VAL_PATH,
-        #     structured_val_path=STRUCTURED_VAL_PATH,
-        #     val_annotations_file=VAL_ANNOTATIONS_FILE,
-        #)
         restructure_imageNet(
-            data_path=RAW_PATH,
-            structured_train_path=STRUCTURED_TRAIN_PATH,
-            structured_val_path=STRUCTURED_VAL_PATH,
-            structured_test_path=STRUCTURED_TEST_PATH,
-            label_mapping_path = LABEL_MAPPING_PATH
+            data_path=paths['RAW_PATH'],
+            structured_train_path=paths['STRUCTURED_TRAIN_PATH'],
+            structured_val_path=paths['STRUCTURED_VAL_PATH'],
+            structured_test_path=paths['STRUCTURED_TEST_PATH'],
+            label_mapping_path = paths['LABEL_MAPPING_PATH']
         )
-        print("Summarizing the dataset...")
-        num_train_classes, num_train_images = summarize_dataset(STRUCTURED_TRAIN_PATH)
-        num_val_classes, num_val_images = summarize_dataset(STRUCTURED_VAL_PATH)
-        num_test_classes, num_test_images = summarize_dataset(STRUCTURED_TEST_PATH)
+        num_train_classes, num_train_images = summarize_dataset(paths['STRUCTURED_TRAIN_PATH'])
+        num_val_classes, num_val_images = summarize_dataset(paths['STRUCTURED_VAL_PATH'])
+        num_test_classes, num_test_images = summarize_dataset(paths['STRUCTURED_TEST_PATH'])
 
-        print(f"Structured Training Dataset: {num_train_classes} classes, {num_train_images} images.")
-        print(f"Structured Validation Dataset: {num_val_classes} classes, {num_val_images} images.")
-        print(f"Structured Test Dataset: {num_test_classes} classes, {num_test_images} images.")
+        print("Dataset Summary: ImageNet")
+        print(f"{'Split':<15}{'Classes':<10}{'Images':<10}")
+        print("-" * 40)
+        print(f"{'Training':<15}{num_train_classes:<10}{num_train_images:<10}")
+        print(f"{'Validation':<15}{num_val_classes:<10}{num_val_images:<10}")
+        print(f"{'Testing':<15}{num_test_classes:<10}{num_test_images:<10}")
+        print("-" * 40)
 
     if retrain_cnn or retrain_classifier:
-        #print("Loading the datasets...")
-        # train_dataset, val_dataset = load_tiny_imagenet(
-        #     train_data_path=STRUCTURED_TRAIN_PATH,
-        #     val_data_path=STRUCTURED_VAL_PATH,
-        #     batch_size = BATCH_SIZE, 
-        #     augment=AUGMENT)
-
+        # If any of the deep learning models are to be retrained, load the datasets
         batched_train_dataset = load_imageNet(
-            data_path=STRUCTURED_TRAIN_PATH,
-            image_size=(150,150),
-            batch_size=BATCH_SIZE,
-            augment=AUGMENT,
-            shuffle=SHUFFLE
+            data_path=paths['STRUCTURED_TRAIN_PATH'],
+            image_size = parameters['IMAGE_SIZE'],
+            batch_size=parameters['BATCH_SIZE'],
+            augment=parameters['AUGMENT'],
+            shuffle=parameters['SHUFFLE']
         )
         batched_val_dataset = load_imageNet(
-            data_path=STRUCTURED_VAL_PATH,
-            image_size=(150,150),
-            batch_size=BATCH_SIZE,
-            augment=AUGMENT,
-            shuffle = SHUFFLE
+            data_path=paths['STRUCTURED_VAL_PATH'],
+            image_size = parameters['IMAGE_SIZE'],
+            batch_size=parameters['BATCH_SIZE'],
+            augment=parameters['AUGMENT'],
+            shuffle = parameters['SHUFFLE']
         )
-        for images, labels in batched_train_dataset.take(1):
-            print("Sample Images Shape:", images.shape)
-            print("Sample Labels:", labels)
 
-
-    test_dataset = load_imageNet(
-        data_path=STRUCTURED_TEST_PATH,
-        image_size=(150,150),
-        batch_size=BATCH_SIZE,
-        augment=AUGMENT,
-        shuffle=SHUFFLE
-    )
-    
-
-    resnet_model = ResNetModel(input_shape=(150, 150, 3), num_classes=NUM_CLASSES, trainable=True)
+    # Initialize CNN
+    resnet_model = ResNetModel(input_shape=(parameters['IMAGE_SIZE'][0],parameters['IMAGE_SIZE'][1],3),layer_name=parameters['EXTRACT_LAYER_NAME'], num_classes=parameters['NUM_CLASSES'], trainable=True)
     resnet_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
     if retrain_cnn:
-        print("Training the primary CNN...")
+        # Train the CNN with training and validation datasets
+        print(f"Training the CNN on dataset:  '{os.path.basename(paths['RAW_PATH'])}'...")
+        print(f"Epochs: '{parameters['EPOCHS']}'") 
         train_CNN(
             tall_resnet = resnet_model,
             train_dataset=batched_train_dataset,
             val_dataset=batched_val_dataset,
-            output_model_path= NEW_PRIMARY_MODEL_PATH,
-            resnet_weights_path= NEW_PRIMARY_MODEL_PATH,
-            epochs=EPOCHS,
-            batch_size=BATCH_SIZE,
-            augment=AUGMENT
+            resnet_save_path = paths['NEW_PRIMARY_MODEL_PATH'],
+            results_path = paths['TRAIN_RESULTS'],
+            epochs=parameters['EPOCHS'],
+            batch_size=parameters['BATCH_SIZE']
         )
-        print(f"Primary model saved to {NEW_PRIMARY_MODEL_PATH}")
+        # Save the model
+        print(f"CNN saved to {paths['NEW_PRIMARY_MODEL_PATH']}")
     else:
-        resnet_model.load(CURRENT_PRIMARY_MODEL_PATH)
+        # Load the weights from the current CNN
+        print(f"CNN loaded from {paths['CURRENT_PRIMARY_MODEL_PATH']}")
+        resnet_model.load_dense_weights(paths['CURRENT_PRIMARY_MODEL_PATH'])
 
-    classifier_model = SecondaryClassifier_NN(input_shape = (1024,), num_classes=NUM_CLASSES, trainable=True)
+    # Initialize Classifier NN
+    classifier_model = SecondaryClassifier_NN(input_shape = parameters['FEATURE_SIZE'], num_classes=parameters['NUM_CLASSES'], trainable=True)
     classifier_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
     if retrain_classifier:
-        train_features_set = extract_feature_maps("RESNET", resnet_model, EXTRACT_LAYER_NAME, batched_train_dataset)
-        val_features_set = extract_feature_maps("RESNET", resnet_model, EXTRACT_LAYER_NAME, batched_val_dataset)
+        print("-" * 40)
+        print(f"Training NN on feature maps from CNN layer '{parameters['EXTRACT_LAYER_NAME']}'...")
+        # Extract feature maps from the CNN
+        train_features_set = extract_feature_maps(resnet_model, batched_train_dataset)
+        val_features_set = extract_feature_maps(resnet_model, batched_val_dataset)
 
-        #print(f"Train features shape: {train_featunnres_set.shape}")
-        #print(f"Train labels shape: {train_labels.shape}")
+        # Save the feature maps visualization
+        save_feature_maps(train_features_set, paths['TRAIN_FEATURES'], title="Train Set Feature Maps Extracted from CNN")
 
-        print("Training the secondary classifier...")
+        # Train the secondary classifier on the train set feature maps
         train_secondary_classifier(
             classifier_model,
             train_features_set,
             val_features_set,
-            # train_features,
-            # train_labels,
-            # val_features,
-            # val_labels,
-            output_model_path=NEW_SECONDARY_MODEL_PATH,
-            epochs=EPOCHS,
-            batch_size=BATCH_SIZE,
-            augment=AUGMENT
+            classifier_save_path = paths['NEW_SECONDARY_MODEL_PATH'],
+            results_path = paths['TRAIN_RESULTS'],
+            epochs=parameters['EPOCHS'],
+            batch_size=parameters['BATCH_SIZE'],
         )
-
-        print(f"Secondary classifier trained and saved to Code/models/secondary_classifier.pkl")
+        print(f"Classifier NN saved to {paths['NEW_SECONDARY_MODEL_PATH']}")
     else:
-        #classifier_model.load(CURRENT_SECONDARY_MODEL_PATH)
-        classifier_model.load_weights(NEW_PRIMARY_MODEL_PATH)
+        # Load the weights from the top of the CNN
+        # print(f"Classifier NN weights loaded from CNN at {paths['CURRENT_PRIMARY_MODEL_PATH']}")
+        # classifier_model.load_from_resnet(paths['CURRENT_PRIMARY_MODEL_PATH']) #load weights from RESNET
+
+        # Or load the weights from the trained Classifier
+        print(f"Classifier NN loaded from {paths['CURRENT_SECONDARY_MODEL_PATH']}")
+        classifier_model.load_selftrained_weights(paths['CURRENT_SECONDARY_MODEL_PATH'])
     
-    q_classifier = QClassifier("", num_actions = 3, learning_rate = 0.3, discount_rate = 0.4)
+    # BEGIN TESTING PHASE
+
+    # Load the test dataset
+    test_dataset = load_imageNet(
+        data_path=paths['STRUCTURED_TEST_PATH'],
+        image_size = parameters['IMAGE_SIZE'],
+        batch_size= parameters['BATCH_SIZE'],
+        augment= parameters['AUGMENT'],
+        shuffle= parameters['SHUFFLE'],
+        repeat = False
+    )
+    test_feature_set = extract_feature_maps(resnet_model, test_dataset)
+
+    # Get the set of test images that were 'hard to classify'
     marked_hard_vector = get_marked_hard_images(resnet_model, test_dataset)
 
+    # Initialize Q-learning model
+    q_classifier = QClassifier(q_table_dir = "", num_actions = parameters['NUM_ACTIONS'], learning_rate = parameters['LEARNING_RATE'], discount_rate = parameters['DISCOUNT_RATE'], iteration_constant = parameters['ITERATION_CONSTANT'])
+    
     if retrain_q_learning:
-        print("Training the Q-learning model...")
+        # Train the Q-learning model: populate the Q-tables for each hard image
+        print("-" * 40)
+        print("\nTraining the Q-learning model...")
         train_q_tables(
             q_classifier,
-            resnet = resnet_model,
-            secondary_classifier= classifier_model,
+            CNN = resnet_model,
+            classifier = classifier_model,
             dataset = test_dataset,
             marked_hard_images = marked_hard_vector,
-            output_dir = NEW_Q_LEARNING_MODEL_PATH
+            output_dir = paths['NEW_Q_LEARNING_MODEL_PATH']
         )
-        print(f"Q-learning model saved to Code/models/q_classifier.npy")
+        print(f"Q-learning model saved to {paths['NEW_Q_LEARNING_MODEL_PATH']}")
     else:
-        q_classifier.q_table_dir = CURRENT_Q_LEARNING_MODEL_PATH
+        # Load the Q-learning model: load the table directory where pre-trained Q-tables are stored
+        print(f"Q-learning loaded from {paths['CURRENT_Q_LEARNING_MODEL_PATH']}")
+        q_classifier.q_table_dir = paths['CURRENT_Q_LEARNING_MODEL_PATH']
 
-    # ##BEGIN TESTING PHASE
+    # Test the models
+    print("-" * 40+"\n Testing Phase:")
+
+    # Evaluate the models on the test dataset
+    CNN_classify_test(resnet_model, test_dataset)
+
+    # Evaluate the secondary classifier on the test dataset and the Q-learning model using the secondary classifier
+    RL_classify_test(resnet_model, classifier_model, q_classifier, marked_hard_vector, test_dataset, test_feature_set, paths['PICTURES'])
     
-    basic_accuracy1, basis_accuracy2 = basic_classify_test(resnet_model, test_dataset)
-    print(f"Primary Model Accuracy: {basic_accuracy1}", f"Another way: {basis_accuracy2}")
-
-    accuracy, Q_accuracy = RL_classify_test(resnet_model, classifier_model, q_classifier, marked_hard_vector, test_dataset)
-    print(f"Secondary Model Accuracy: {accuracy}")
-    print(f"Q-learning Model Accuracy: {Q_accuracy}")
-
-    
-    #for image in hard_to_classify set:
-    
-        
-        #RL based classification:
-        #random actions selected
-        #action applied
-        #new feature map extracted
-        # current state is decided after observing standard deviation of predictions scores
-        #reward is given based on the change in prediction score
-        #number of iterations for updating Q-table is axm = 20
-        #alpha = 0.4
-        #discount rate = 0.3
-        #after 20 iterations, the action with the highest Q-value is selected
-        #this action is applied to the image
-        #the new feature map is extracted
-        #the new feature map is classified
-        
-    #extract feature map
-    
-
-    #RL based classification:
-        #random actions selected
-        #action applied
-        #new feature map extracted
-        # current state is decided after observing standard deviation of predictions scores
-        #reward is given based on the change in prediction score
-        #number of iterations for updating Q-table is axm = 20
-        #alpha = 0.4
-        #discount rate = 0.3
-        #after 20 iterations, the action with the highest Q-value is selected
-        #this action is applied to the image
-        #the new feature map is extracted
-        #the new feature map is classified
-    # Step 4: Evaluate the primary CNN
-    # print("Evaluating the primary CNN...")
-    # evaluate_model(
-    #     model_path="Code/models/resnet_model.h5",
-    #     dataset=single_val_dataset,
-    #     is_primary=True,
-    # )
-
-    # print("Evaluating the secondary classifier...")
-    # evaluate_model(
-    #     model_path="Code/models/secondary_classifier.pkl",
-    #     dataset=val_dataset,
-    #     is_primary=False,
-    # )
+    # Evaluate the Q-learning model using resnet
+    RL_resnet_classify_test(resnet_model, q_classifier, marked_hard_vector, test_dataset,  test_feature_set)
 
 if __name__ == "__main__":
     print("Do you need to restructure the data? (y/n)")
@@ -245,12 +228,8 @@ if __name__ == "__main__":
     
     if cnn_choice == "t":
         # Display details for retraining
-        dataset = os.path.basename(RAW_PATH)
-        print(f"Training on dataset:  '{dataset}'")
-        print(f"Epochs: '{EPOCHS}'") 
         retrain_cnn = True
     elif cnn_choice == "l":
-        print(f"CNN loaded from {CURRENT_PRIMARY_MODEL_PATH}")
         retrain_cnn = False
     else:
         print("Invalid choice. Please restart and choose 't' for retrain or 'l' for load.")
@@ -258,12 +237,9 @@ if __name__ == "__main__":
 
     print("Do you want to retrain or load the classifying structure? (t/l)")
     classifier_choice = input().strip().lower()
-
     if classifier_choice == "t":
-        print(f"Retraining NN on feature maps from CNN layer '{EXTRACT_LAYER_NAME}'")
         retrain_classifier = True
     elif classifier_choice == "l":
-        print(f"Classifier loaded from {CURRENT_SECONDARY_MODEL_PATH}")
         retrain_classifier = False
     else:
         print("Invalid choice. Please restart and choose 't' for retrain or 'l' for load.")
@@ -282,10 +258,17 @@ if __name__ == "__main__":
     else:
         retrain_q_learning = True
 
-    # Call main with appropriate variables
+    print("Name for the results folder: ")
+    test_name = input().strip().lower()
+    if test_name == "":
+            print("Name cannot be empty. Please restart and enter a valid name.")
+            exit(1)
+
+    #Call main with appropriate variables
     main(
         restructure_data = restructure_data,
-        retrain_cnn=retrain_cnn,
-        retrain_classifier=retrain_classifier,
-        retrain_q_learning=retrain_q_learning
+        retrain_cnn= retrain_cnn,
+        retrain_classifier= retrain_classifier,
+        retrain_q_learning= retrain_q_learning,
+        test_name = test_name
     )

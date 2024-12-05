@@ -1,0 +1,40 @@
+# ImageNet Configuration File
+# Paths
+#SELECTED_CLASSES = ["n01443537", "n01774384", "n02002724", "n07873807", "n04398044"]
+raw_data_path: "Code/data/raw/ImageNet"
+structured_train_path: "Code/data/processed/ImageNet/structured_train"
+structured_val_path: "Code/data/processed/ImageNet/structured_val"
+structured_test_path: "Code/data/processed/ImageNet/structured_test"
+label_mapping_path: "Code/data/processed/ImageNet/labelmappings.txt"
+
+# Model Paths
+new_primary_model_path: "Code/models/resnet_model/ImageNet"
+current_primary_model_path: "Code/models/resnet_model/ImageNet/10epochs.weights.h5"
+new_secondary_model_path: "Code/models/secondary_classifier_NN/ImageNet"
+current_secondary_model_path: "Code/models/secondary_classifier_NN/ImageNet/10epochs.weights.h5"
+new_q_learning_model_path: "Code/models/q_classifier"
+current_q_learning_model_path: ""
+
+# Results Paths
+results_path: "Code/results/ImageNet"
+
+# Dataset Parameters
+num_classes: 4
+image_size: [150, 150]
+batch_size: 32
+augment: false
+shuffle: true
+
+# Training Parameters
+epochs: 10
+extract_layer_name: "conv5_block3_out"
+feature_size: [7, 7, 2048]
+
+# Q-Learning Parameters
+num_actions: 3
+learning_rate: 0.3
+discount_rate: 0.4
+iteration_constant: 20
+
+# Seed for reproducibility
+seed: 42

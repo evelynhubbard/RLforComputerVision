@@ -2,39 +2,40 @@
 626FinalProject_venv/
 *.env
 venv_forpython10/
-
-# Ignore datasets
-Code/data
-
-# Checkpoints and saved models
-checkpoints/
-Code/models/primary/*.h5
-Code/models/secondary/*.pkl
+*/venv/
 
 # Datasets (raw and processed)
-Code/data/raw/
-Code/data/processed/
+Code/data/
 
-# Ignore logs
-logs/
+# Past Models
+Code/models/basic_q_classifier/
+Code/models/basic_resnet_model/
+Code/models/basic_q_classifier.py
+Code/models/basic_resnet.py
+Code/models/secondary_classifier_SVM.py
+Code/anothermain.py
+
+# Checkpoints and saved models
+Code/models/resnet_model/
+Code/models/resnet_model/*.h5
+!Code/models/resnet_model/ImageNet/10epochs.weights.h5
+Code/models/secondary_classifier_NN/
+Code/models/secondary_classifier_NN/*.h5
+!Code/models/secondary_classifier_NN/ImageNet/10epochs.weights.h5
+Code/models/q_classifier/
+Code/models/q_classifier/*.npy
+
+# Results
+Code/results/*
+!Code/results/
+!Code/results/ImageNet/
+!Code/results/ImageNet/10epochs/
 
 # Ignore Python cache files
 __pycache__/
 *.pyc
-# Byte-compiled / optimized / DLL files
 *.pyo
 *.pyd
 
-Code/runners/evaluate.py
-
-
 # Ignore IDE/project-specific files
 .vscode/
-
-Report/
-
-.ipynb_checkpoints/
-
-tall_resnet_trained_model.h5
-secondary_classifier_NN.h5
-*.h5

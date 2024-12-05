@@ -19,7 +19,7 @@ class SecondaryClassifier_SVM:
     def predict(self, test_features):
         return self.model.predict(test_features)
 
-    def evaluate(self, test_features, test_labels):
-        predictions = self.model.predict(test_features)
-        accuracy = (predictions == test_labels).mean()
-        return accuracy
+    def evaluate(self, test_features):
+        # predictions = self.model.predict(test_features)
+        # accuracy = (predictions == test_labels).mean()
+        return self.model.predict(test_features)
