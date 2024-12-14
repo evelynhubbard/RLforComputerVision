@@ -20,8 +20,8 @@ FINALPROJECT/      # Directory for storing model checkpoints
 │   │   ├── q_classifier.py    # Q-Learning definition
 │   │   ├── resnet.py          # Custom ResNet50 CNN model definition
 │   │   └── secondary_classifier.py  # Secondary classifier definition
-│   │   └── secondary_classifier_NN/  # Saved trained secondary classifier model weigts
-│   │   └── resnet_model/       # Saved trained CNN weigts
+│   │   └── secondary_classifier_NN/  # Saved trained secondary classifier model weights
+│   │   └── resnet_model/       # Saved trained CNN weights
 │   ├── results/               # Results from training and evaluation
 │   │   └── ImageNet/10epochs/ # Resultsfrom10epochs
 │   ├── runners/               # Scripts for running workflows
