@@ -33,4 +33,5 @@ FINALPROJECT/      # Directory for storing model checkpoints
 │   └── README.txt             # Documentation
 └── requirements.txt           # Python dependencies
 └── ImageClassification by RL.pdf  # Paper by Hafiz, which the implementation is aiming to replicate
+└── report_EH.pdf
 
